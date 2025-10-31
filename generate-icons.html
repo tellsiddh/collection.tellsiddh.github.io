@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Icons</title>
+</head>
+<body>
+    <h1>PWA Icon Generator</h1>
+    <canvas id="canvas192" width="192" height="192" style="border: 1px solid #ccc;"></canvas>
+    <br><br>
+    <canvas id="canvas512" width="512" height="512" style="border: 1px solid #ccc;"></canvas>
+    <br><br>
+    <button onclick="downloadIcons()">Download Icons</button>
+    
+    <script>
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            const scale = size / 192;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, size, size);
+            
+            // Background
+            ctx.fillStyle = '#2196F3';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Book/Collection
+            ctx.fillStyle = 'white';
+            ctx.fillRect(40 * scale, 50 * scale, 112 * scale, 92 * scale);
+            
+            // Book border
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3 * scale;
+            ctx.strokeRect(40 * scale, 50 * scale, 112 * scale, 92 * scale);
+            
+            // Pages
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(45 * scale, 45 * scale, 102 * scale, 8 * scale);
+            
+            ctx.fillStyle = '#e0e0e0';
+            ctx.fillRect(45 * scale, 40 * scale, 97 * scale, 8 * scale);
+            
+            // Bookmark
+            ctx.fillStyle = '#FFC107';
+            ctx.fillRect(130 * scale, 50 * scale, 15 * scale, 30 * scale);
+            
+            // Bookmark triangle
+            ctx.beginPath();
+            ctx.moveTo(130 * scale, 80 * scale);
+            ctx.lineTo(137.5 * scale, 75 * scale);
+            ctx.lineTo(145 * scale, 80 * scale);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Collection dots
+            ctx.fillStyle = '#2196F3';
+            const dotSize = 3 * scale;
+            const positions = [
+                [70, 80], [85, 80], [100, 80],
+                [70, 100], [85, 100], [100, 100],
+                [70, 120], [85, 120], [100, 120]
+            ];
+            
+            positions.forEach(([x, y]) => {
+                ctx.beginPath();
+                ctx.arc(x * scale, y * scale, dotSize, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+        }
+        
+        // Draw icons
+        drawIcon(document.getElementById('canvas192'), 192);
+        drawIcon(document.getElementById('canvas512'), 512);
+        
+        function downloadIcons() {
+            // Download 192x192 icon
+            const canvas192 = document.getElementById('canvas192');
+            const link192 = document.createElement('a');
+            link192.download = 'icon-192.png';
+            link192.href = canvas192.toDataURL();
+            link192.click();
+            
+            // Download 512x512 icon
+            setTimeout(() => {
+                const canvas512 = document.getElementById('canvas512');
+                const link512 = document.createElement('a');
+                link512.download = 'icon-512.png';
+                link512.href = canvas512.toDataURL();
+                link512.click();
+            }, 100);
+        }
+    </script>
+</body>
+</html>

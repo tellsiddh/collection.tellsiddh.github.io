@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Save Link - My Collections</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png">
+    <meta name="theme-color" content="#2196F3">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .save-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .save-container h1 {
+            color: #2196F3;
+            margin-bottom: 1rem;
+        }
+
+        .url-preview {
+            background: #f5f5f5;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            word-break: break-all;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 0.5rem;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #1976D2;
+        }
+
+        .btn-secondary {
+            background: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #555;
+        }
+
+        .success-message {
+            color: #4CAF50;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .loading {
+            color: #2196F3;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="save-container">
+        <h1>💾 Save Link</h1>
+        
+        <div id="urlPreview" class="url-preview"></div>
+        
+        <form id="saveLinkForm">
+            <div class="form-group">
+                <label for="title">Title</label>
+                <input type="text" id="title" placeholder="Enter a title for this link...">
+            </div>
+            
+            <div class="form-group">
+                <label for="notes">Notes</label>
+                <textarea id="notes" placeholder="Add notes or thoughts..."></textarea>
+            </div>
+            
+            <button type="submit" class="btn">💾 Save to Collection</button>
+            <button type="button" class="btn btn-secondary" onclick="window.close()">Cancel</button>
+        </form>
+        
+        <div id="message"></div>
+    </div>
+
+    <script>
+        // Get URL from query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const sharedUrl = urlParams.get('url') || urlParams.get('text');
+        
+        if (sharedUrl) {
+            document.getElementById('urlPreview').textContent = sharedUrl;
+            
+            // Try to extract a title from the URL
+            try {
+                const url = new URL(sharedUrl);
+                const pathParts = url.pathname.split('/').filter(p => p);
+                let suggestedTitle = '';
+                
+                if (url.hostname.includes('instagram.com')) {
+                    suggestedTitle = 'Instagram Post';
+                } else if (url.hostname.includes('reddit.com')) {
+                    suggestedTitle = 'Reddit Post';
+                } else if (url.hostname.includes('twitter.com') || url.hostname.includes('x.com')) {
+                    suggestedTitle = 'Tweet';
+                } else {
+                    suggestedTitle = url.hostname;
+                }
+                
+                document.getElementById('title').value = suggestedTitle;
+            } catch (e) {
+                console.log('Could not parse URL for title suggestion');
+            }
+        } else {
+            document.getElementById('urlPreview').textContent = 'No URL provided';
+        }
+
+        document.getElementById('saveLinkForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!sharedUrl) {
+                document.getElementById('message').innerHTML = '<div style="color: red;">No URL to save!</div>';
+                return;
+            }
+            
+            const title = document.getElementById('title').value || 'Untitled';
+            const notes = document.getElementById('notes').value;
+            
+            // Create the link object
+            const linkData = {
+                id: Date.now().toString(),
+                url: sharedUrl,
+                title: title,
+                notes: notes,
+                dateAdded: new Date().toISOString(),
+                hostname: getHostname(sharedUrl)
+            };
+            
+            // Get existing links from localStorage
+            const existingLinks = JSON.parse(localStorage.getItem('myCollections') || '[]');
+            
+            // Add new link
+            existingLinks.unshift(linkData);
+            
+            // Save back to localStorage
+            localStorage.setItem('myCollections', JSON.stringify(existingLinks));
+            
+            // Show success message
+            document.getElementById('message').innerHTML = '<div class="success-message">✅ Link saved successfully!</div>';
+            
+            // Redirect to main page after a delay
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1500);
+        });
+
+        function getHostname(url) {
+            try {
+                return new URL(url).hostname;
+            } catch (e) {
+                return 'Unknown';
+            }
+        }
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
