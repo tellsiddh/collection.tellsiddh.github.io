@@ -54,11 +54,16 @@ The app will open at `http://localhost:8080`
 3. Tap it - the app will open with the link pre-filled
 4. Add title/notes and save
 
+### Using Direct URLs
+You can save links by navigating directly to the save page with URL parameters:
+- `https://collection.tellsiddh.com/save.html?url=example.com` - Opens save form with URL pre-filled
+- `https://collection.tellsiddh.com/save.html?url=example.com&auto=true` - Automatically saves the URL
+
 ### iOS Workaround (Using Shortcuts)
 1. Open the Shortcuts app on iPhone
 2. Create a new shortcut:
    - Add "Get URLs from Input"
-   - Add "Open URLs" with: `http://localhost:8080/save.html?url=[URL]`
+   - Add "Open URLs" with: `https://collection.tellsiddh.com/save.html?url=[URL]&auto=true`
 3. Save as "Save to Collection"
 4. Enable "Show in Share Sheet"
 

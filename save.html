@@ -142,10 +142,17 @@
     <script>
         // Get URL from query parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const sharedUrl = urlParams.get('url') || urlParams.get('text');
+        let sharedUrl = urlParams.get('url') || urlParams.get('text');
+        const autoSave = urlParams.get('auto') === 'true';
+        
+        // Normalize URL - add protocol if missing
+        if (sharedUrl && !sharedUrl.startsWith('http://') && !sharedUrl.startsWith('https://')) {
+            sharedUrl = 'https://' + sharedUrl;
+        }
         
         if (sharedUrl) {
             document.getElementById('urlPreview').textContent = sharedUrl;
+            console.log('URL detected:', sharedUrl);
             
             // Try to extract a title from the URL
             try {
@@ -167,47 +174,71 @@
             } catch (e) {
                 console.log('Could not parse URL for title suggestion');
             }
+            
+            // Auto-save if requested
+            if (autoSave) {
+                // Wait a moment for the UI to render, then auto-save
+                setTimeout(() => {
+                    saveLink();
+                }, 500);
+            }
         } else {
             document.getElementById('urlPreview').textContent = 'No URL provided';
         }
 
-        document.getElementById('saveLinkForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
+        function saveLink() {
             if (!sharedUrl) {
                 document.getElementById('message').innerHTML = '<div style="color: red;">No URL to save!</div>';
                 return;
             }
             
-            const title = document.getElementById('title').value || 'Untitled';
-            const notes = document.getElementById('notes').value;
-            
-            // Create the link object
-            const linkData = {
-                id: Date.now().toString(),
-                url: sharedUrl,
-                title: title,
-                notes: notes,
-                dateAdded: new Date().toISOString(),
-                hostname: getHostname(sharedUrl)
-            };
-            
-            // Get existing links from localStorage
-            const existingLinks = JSON.parse(localStorage.getItem('myCollections') || '[]');
-            
-            // Add new link
-            existingLinks.unshift(linkData);
-            
-            // Save back to localStorage
-            localStorage.setItem('myCollections', JSON.stringify(existingLinks));
-            
-            // Show success message
-            document.getElementById('message').innerHTML = '<div class="success-message">✅ Link saved successfully!</div>';
-            
-            // Redirect to main page after a delay
-            setTimeout(() => {
-                window.location.href = '/';
-            }, 1500);
+            try {
+                const title = document.getElementById('title').value || 'Untitled';
+                const notes = document.getElementById('notes').value;
+                
+                // Create the link object
+                const linkData = {
+                    id: Date.now().toString(),
+                    url: sharedUrl,
+                    title: title,
+                    notes: notes,
+                    dateAdded: new Date().toISOString(),
+                    hostname: getHostname(sharedUrl)
+                };
+                
+                // Check if localStorage is available
+                if (typeof(Storage) === "undefined") {
+                    throw new Error("localStorage not supported");
+                }
+                
+                // Get existing links from localStorage
+                const existingLinks = JSON.parse(localStorage.getItem('myCollections') || '[]');
+                
+                // Add new link
+                existingLinks.unshift(linkData);
+                
+                // Save back to localStorage
+                localStorage.setItem('myCollections', JSON.stringify(existingLinks));
+                
+                // Show success message
+                document.getElementById('message').innerHTML = '<div class="success-message">✅ Link saved successfully!</div>';
+                
+                console.log('Link saved:', linkData);
+                
+                // Redirect to main page after a delay
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Error saving link:', error);
+                document.getElementById('message').innerHTML = `<div style="color: red;">❌ Error: ${error.message}<br><small>Make sure you're using http:// or https:// (not file://)</small></div>`;
+            }
+        }
+
+        document.getElementById('saveLinkForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveLink();
         });
 
         function getHostname(url) {
